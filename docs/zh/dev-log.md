@@ -15,6 +15,7 @@
 - 已验证两个嵌套仓库的工作区均为干净状态。
 - 已添加双语工作区环境与首次复现指南。
 - 已将本地控制平面仓库关联到 GitHub remote `https://github.com/oldzhu/paddle-amd.git`。
+- 已补充远程 AMD ROCm Jupyter 工作流资产，包括工作区 skill、Jupyter API 辅助脚本以及远程 bootstrap 命令生成器。
 - 创建双语项目文档骨架。
 - 添加项目级共享指令，用于强制执行双语跟踪与证据记录规范。
 

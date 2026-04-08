@@ -45,6 +45,7 @@ When a finding is still preliminary, mark it clearly as hypothesis, not fact.
 2. Final HIP BF16 validation must be run on native Linux ROCm hardware or a remote AMD ROCm machine.
 3. Record the exact environment for every meaningful validation run: OS, ROCm version, GPU model, Paddle commit, PaddleX commit, Python version, and command line.
 4. Save screenshots, logs, benchmark outputs, and reproduction commands under `evidence/` and summarize them in the bilingual validation docs.
+5. For the AMD Radeon GPU cluster Jupyter environment, instance creation is manual by the user. Automation in this repo may prepare commands, authenticate to Jupyter APIs, create terminals, or upload files when credentials are available, but shell execution inside the remote instance must be treated as a separately verified step.
 
 ## Tracking Requirements
 

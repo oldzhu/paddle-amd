@@ -15,6 +15,7 @@
 - Verified both nested repos are clean worktrees.
 - Added bilingual workspace setup and first-reproduction guide.
 - Linked the local control-plane repo to GitHub remote `https://github.com/oldzhu/paddle-amd.git`.
+- Added remote AMD ROCm Jupyter workflow assets, including a workspace skill, a Jupyter API helper, and a remote bootstrap command generator.
 - Created bilingual project documentation skeleton.
 - Added shared project instructions to enforce bilingual tracking and evidence discipline.
 

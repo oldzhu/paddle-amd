@@ -43,6 +43,57 @@ The `paddlerepos/` directory is intentionally ignored by the control-plane repo.
 - operator test execution
 - PaddleOCR-VL BF16 reproduction and acceptance validation
 
+## Remote AMD Cluster Jupyter Environment
+
+Known entry points:
+
+- cluster page: `http://36.151.243.69:30081`
+- Jupyter Lab instance pattern: `http://36.151.243.69:30005/lab`
+
+Current operating model:
+
+1. you create or revive the remote instance manually
+2. this repo can prepare commands and interact with Jupyter APIs if a token or password is available
+3. shell command execution in the remote environment is still treated as a verified manual step unless terminal websocket automation is added later
+
+Remote helper assets:
+
+- `scripts/jupyter_remote.py` for Jupyter API login, terminal listing or creation, session listing, and file upload
+- `scripts/render_remote_bootstrap.sh` for generating a terminal-ready bootstrap script to clone or refresh this repo, Paddle, and PaddleX on the remote host
+- `.github/skills/remote-rocm-jupyter/SKILL.md` for future Copilot workflow reuse
+
+Example login flow with a token:
+
+```bash
+python3 scripts/jupyter_remote.py login \
+	--url http://36.151.243.69:30005 \
+	--token YOUR_TOKEN
+```
+
+Example login flow with a password:
+
+```bash
+python3 scripts/jupyter_remote.py login \
+	--url http://36.151.243.69:30005 \
+	--password YOUR_PASSWORD
+```
+
+Example terminal management and upload:
+
+```bash
+python3 scripts/jupyter_remote.py list-terminals
+python3 scripts/jupyter_remote.py create-terminal
+python3 scripts/jupyter_remote.py upload scripts/repro_checklist.sh repro_checklist.sh
+```
+
+Example command bundle generation for manual execution in the remote terminal:
+
+```bash
+scripts/render_remote_bootstrap.sh > /tmp/remote_bootstrap.sh
+```
+
+You can then upload that script to Jupyter or paste the generated output into a remote terminal.
+
 ## First Reproduction Checklist
 
 1. Capture the environment with `scripts/capture_env.sh` on the ROCm validation machine.

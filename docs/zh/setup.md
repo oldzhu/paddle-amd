@@ -43,6 +43,57 @@
 - 算子测试执行
 - PaddleOCR-VL BF16 复现与验收验证
 
+## 远程 AMD 集群 Jupyter 环境
+
+已知入口：
+
+- 集群入口页：`http://36.151.243.69:30081`
+- Jupyter Lab 实例形式：`http://36.151.243.69:30005/lab`
+
+当前工作模式：
+
+1. 由你手动创建或恢复远程实例
+2. 如果提供 token 或 password，本仓库可以准备命令并访问 Jupyter API
+3. 在远程环境中真正执行 shell 命令，当前仍视为需要单独核实的手动步骤；除非后续补充 terminal websocket 自动化
+
+远程辅助资产：
+
+- `scripts/jupyter_remote.py`：用于 Jupyter API 登录、终端列表或创建、session 列表与文件上传
+- `scripts/render_remote_bootstrap.sh`：生成可直接在远程终端执行的 bootstrap 脚本，用于 clone 或刷新本仓库、Paddle 和 PaddleX
+- `.github/skills/remote-rocm-jupyter/SKILL.md`：供后续 Copilot 复用的远程 ROCm 工作流说明
+
+使用 token 登录示例：
+
+```bash
+python3 scripts/jupyter_remote.py login \
+	--url http://36.151.243.69:30005 \
+	--token YOUR_TOKEN
+```
+
+使用 password 登录示例：
+
+```bash
+python3 scripts/jupyter_remote.py login \
+	--url http://36.151.243.69:30005 \
+	--password YOUR_PASSWORD
+```
+
+终端管理与上传示例：
+
+```bash
+python3 scripts/jupyter_remote.py list-terminals
+python3 scripts/jupyter_remote.py create-terminal
+python3 scripts/jupyter_remote.py upload scripts/repro_checklist.sh repro_checklist.sh
+```
+
+用于远程终端手动执行的命令包生成示例：
+
+```bash
+scripts/render_remote_bootstrap.sh > /tmp/remote_bootstrap.sh
+```
+
+随后可以将该脚本上传到 Jupyter，或将生成的输出直接粘贴到远程终端中执行。
+
 ## 首次复现清单
 
 1. 在 ROCm 验证机器上使用 `scripts/capture_env.sh` 采集环境。

@@ -15,5 +15,6 @@
 - verified local PaddleX clone on `develop` and recorded its path and commit
 - added bilingual workspace setup and reproduction guide
 - added GitHub origin remote for the control-plane repo
+- added remote AMD Jupyter workflow skill and helper scripts
 - added bilingual planning, design, decision, validation, and development log documents
 - added project-wide Copilot instructions for documentation and tracking discipline

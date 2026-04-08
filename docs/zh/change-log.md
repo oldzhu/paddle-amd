@@ -15,5 +15,6 @@
 - 验证本地 PaddleX `develop` clone，并记录其路径与 commit
 - 添加双语工作区环境与复现指南
 - 为控制平面仓库添加 GitHub origin remote
+- 添加远程 AMD Jupyter 工作流 skill 与辅助脚本
 - 添加双语计划、设计、决策、验证与开发日志文档
 - 添加项目级 Copilot 指令，用于约束文档与跟踪规范
