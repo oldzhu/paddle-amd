@@ -1,0 +1,16 @@
+.DS_Store
+Thumbs.db
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.venv/
+venv/
+
+*.log
+
+paddlerepos/
+evidence/screenshots/
+evidence/tmp/
