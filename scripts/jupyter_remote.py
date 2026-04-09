@@ -141,19 +141,41 @@ class JupyterRemote:
             url = f"{url}?token={urllib.parse.quote(token)}"
         return url
 
-    def execute_in_terminal(self, terminal_name: str, command: str, timeout: float = 60.0):
+    def execute_in_terminal(self,
+                            terminal_name: str,
+                            command: str,
+                            timeout: float = 60.0,
+                            use_script_file: bool = False):
         ws = websocket.create_connection(self.websocket_url(terminal_name), timeout=timeout)
         ws.settimeout(timeout)
         marker = f"__PADDLE_AMD_DONE_{uuid.uuid4().hex}__"
-        wrapped = (
-            "bash -lc "
-            + shlex.quote(
-                command
+        if use_script_file:
+            script_path = f"/tmp/paddle_amd_exec_{uuid.uuid4().hex}.sh"
+            wrapped = (
+                "cat <<'__PADDLE_AMD_REMOTE_SCRIPT__' > "
+                + shlex.quote(script_path)
                 + "\n"
-                + f"__paddle_amd_status=$?; printf '\\n{marker}:%s\\n' \"$__paddle_amd_status\"\n"
+                + command
+                + "\n__PADDLE_AMD_REMOTE_SCRIPT__\n"
+                + "bash "
+                + shlex.quote(script_path)
+                + "\n"
+                + "__paddle_amd_status=$?\n"
+                + "rm -f "
+                + shlex.quote(script_path)
+                + "\n"
+                + f"printf '\n{marker}:%s\\n' \"$__paddle_amd_status\"\n"
             )
-            + "\n"
-        )
+        else:
+            wrapped = (
+                "bash -lc "
+                + shlex.quote(
+                    command
+                    + "\n"
+                    + f"__paddle_amd_status=$?; printf '\\n{marker}:%s\\n' \"$__paddle_amd_status\"\n"
+                )
+                + "\n"
+            )
 
         output_parts = []
         exit_code = None
@@ -253,7 +275,12 @@ def cmd_exec(args):
             terminal_name = created["name"]
 
     command = args.command if args.command is not None else Path(args.command_file).read_text()
-    result = client.execute_in_terminal(terminal_name, command, timeout=args.timeout)
+    result = client.execute_in_terminal(
+        terminal_name,
+        command,
+        timeout=args.timeout,
+        use_script_file=args.command_file is not None,
+    )
     if args.json:
         print(json.dumps(result, indent=2, sort_keys=True))
     else:

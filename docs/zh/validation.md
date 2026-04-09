@@ -45,3 +45,23 @@
 - 初步结论：
 	- 该远程实例适合作为基于 ROCm 的验证环境。
 	- 在开始框架级复现之前，需要先在远程环境中安装或编译 Paddle。
+
+### 2026-04-09 - 远程按实例 bootstrap 验证
+
+- 验证目标：同一 AMD 集群 Jupyter 实例
+- 访问方式：认证后的 Jupyter API 加 terminal websocket
+- 远程终端：`2`
+- 准备脚本：`scripts/remote_prepare_instance.sh 2 /app/paddle-amd-remote`
+- 已验证结果：
+	- 控制平面仓库已 clone 到 `/app/paddle-amd-remote`
+	- Paddle 已 clone 到 `/app/paddle-amd-remote/paddlerepos/Paddle`
+	- PaddleX 已 clone 到 `/app/paddle-amd-remote/paddlerepos/PaddleX`
+	- 远程控制平面 commit：`7d037f0`
+	- 远程 Paddle commit：`5ae373f`
+	- 远程 PaddleX commit：`c18f2b0`
+	- 环境采集结果已保存到 `/app/paddle-amd-remote/evidence/env/`
+- 剩余阻塞：
+	- `/opt/venv/bin/python` 中仍无法导入 Paddle
+- 结论：
+	- 可复用的按实例准备流程已经跑通。
+	- 下一步远程环境任务是为当前 Python 环境安装或编译 Paddle。

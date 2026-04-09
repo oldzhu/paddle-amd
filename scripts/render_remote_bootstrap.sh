@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-remote_root="${1:-\$HOME/paddle-amd-remote}"
+remote_root="${1:-/app/paddle-amd-remote}"
 control_repo_url="${2:-https://github.com/oldzhu/paddle-amd.git}"
 paddle_url="${3:-https://github.com/PaddlePaddle/Paddle.git}"
 paddlex_url="${4:-https://github.com/PaddlePaddle/PaddleX.git}"
@@ -45,6 +45,17 @@ fi
 
 cd "\$REMOTE_ROOT"
 ./scripts/capture_env.sh
+
+echo
+echo "== remote paddle import check =="
+/opt/venv/bin/python - <<'PY'
+try:
+  import paddle
+  print("paddle_version:", getattr(paddle, "__version__", "unknown"))
+  print("compiled_with_rocm:", paddle.is_compiled_with_rocm())
+except Exception as exc:
+  print("paddle_import_failed:", repr(exc))
+PY
 
 git rev-parse HEAD
 git -C paddlerepos/Paddle rev-parse HEAD

@@ -20,6 +20,9 @@
 - 已完成远程 Jupyter 实例认证，并在终端 `1` 上验证 terminal websocket 命令执行。
 - 已通过 Jupyter terminal websocket 上传并执行远程环境检查脚本。
 - 已确认远程主机具备 ROCm，但当前 Python 环境中尚未安装 Paddle。
+- 已添加可复用的按实例远程准备封装脚本，以便后续处理临时 Jupyter 实例。
+- 已修复远程 command-file 执行路径，使 `set -e` 脚本失败时能够返回正确退出码，而不再表现为“卡住”。
+- 已成功在当前远程实例下完成 `/app/paddle-amd-remote` 工作区 bootstrap，包括控制平面仓库、Paddle clone 和 PaddleX clone。
 - 创建双语项目文档骨架。
 - 添加项目级共享指令，用于强制执行双语跟踪与证据记录规范。
 

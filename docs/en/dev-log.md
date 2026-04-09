@@ -20,6 +20,9 @@
 - Authenticated to the remote Jupyter instance and verified terminal websocket execution against terminal `1`.
 - Uploaded and executed the remote environment check script through the Jupyter terminal websocket.
 - Confirmed ROCm is available on the remote host, but Paddle is not installed in the current Python environment.
+- Added a reusable per-instance remote preparation wrapper for future ephemeral Jupyter instances.
+- Fixed remote command-file execution so failing `set -e` scripts return a proper exit code instead of appearing to hang.
+- Successfully bootstrapped the current remote instance under `/app/paddle-amd-remote`, including the control-plane repo, Paddle clone, and PaddleX clone.
 - Created bilingual project documentation skeleton.
 - Added shared project instructions to enforce bilingual tracking and evidence discipline.
 

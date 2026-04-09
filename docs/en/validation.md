@@ -45,3 +45,23 @@
 - Preliminary conclusion:
 	- The remote instance is suitable for ROCm-based validation work.
 	- Paddle must be installed or built in the remote environment before framework reproduction can begin.
+
+### 2026-04-09 - Remote per-instance bootstrap verification
+
+- Validation target: same AMD cluster Jupyter instance
+- Access mode: authenticated Jupyter API plus terminal websocket
+- Remote terminal: `2`
+- Preparation wrapper: `scripts/remote_prepare_instance.sh 2 /app/paddle-amd-remote`
+- Verified results:
+	- control-plane repo cloned to `/app/paddle-amd-remote`
+	- Paddle cloned to `/app/paddle-amd-remote/paddlerepos/Paddle`
+	- PaddleX cloned to `/app/paddle-amd-remote/paddlerepos/PaddleX`
+	- remote control-plane commit: `7d037f0`
+	- remote Paddle commit: `5ae373f`
+	- remote PaddleX commit: `c18f2b0`
+	- environment capture saved under `/app/paddle-amd-remote/evidence/env/`
+- Remaining blocker:
+	- Paddle is still not importable in `/opt/venv/bin/python`
+- Conclusion:
+	- The reusable per-instance preparation workflow now works.
+	- The next remote setup task is installing or building Paddle in the active environment.

@@ -18,5 +18,7 @@
 - 添加远程 AMD Jupyter 工作流 skill 与辅助脚本
 - 添加 Jupyter terminal websocket 自动化支持
 - 记录首次通过认证的远程 ROCm 环境检查运行结果
+- 添加可复用的按实例远程准备自动化流程
+- 修复远程 bootstrap 完成态处理，并在真实 Jupyter 实例上验证按实例 bootstrap 成功
 - 添加双语计划、设计、决策、验证与开发日志文档
 - 添加项目级 Copilot 指令，用于约束文档与跟踪规范

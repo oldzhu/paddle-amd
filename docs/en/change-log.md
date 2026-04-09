@@ -18,5 +18,7 @@
 - added remote AMD Jupyter workflow skill and helper scripts
 - added Jupyter terminal websocket automation support
 - recorded first authenticated remote ROCm environment inspection run
+- added reusable per-instance remote preparation automation
+- fixed remote bootstrap completion handling and verified per-instance bootstrap on the live Jupyter instance
 - added bilingual planning, design, decision, validation, and development log documents
 - added project-wide Copilot instructions for documentation and tracking discipline

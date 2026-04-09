@@ -10,3 +10,4 @@ This directory is reserved for reproducibility helpers such as:
 - remote Jupyter terminal websocket helpers
 - remote bootstrap command generators
 - remote environment check command generators
+- remote per-instance preparation wrappers

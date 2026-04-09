@@ -57,11 +57,18 @@ Current operating model:
 3. this repo can execute commands through the Jupyter terminal websocket when the terminal endpoint is available
 4. results still need to be verified and logged as real validation evidence
 
+Important instance rule:
+
+1. treat every new Jupyter instance as ephemeral
+2. do not assume Paddle is installed in a fresh instance
+3. rerun the remote preparation workflow each time a new instance is created
+
 Remote helper assets:
 
 - `scripts/jupyter_remote.py` for Jupyter API login, terminal listing or creation, session listing, file upload, and terminal websocket execution
 - `scripts/render_remote_bootstrap.sh` for generating a terminal-ready bootstrap script to clone or refresh this repo, Paddle, and PaddleX on the remote host
 - `scripts/render_remote_env_check.sh` for generating a remote environment inspection script
+- `scripts/remote_prepare_instance.sh` for executing the remote bootstrap workflow against the active Jupyter terminal
 - `.github/skills/remote-rocm-jupyter/SKILL.md` for future Copilot workflow reuse
 
 Example login flow with a token:
@@ -93,6 +100,12 @@ Example websocket terminal execution:
 ```bash
 python3 scripts/jupyter_remote.py exec --command "bash paddle_amd_remote_env_check.sh"
 python3 scripts/jupyter_remote.py exec --command-file /tmp/remote_bootstrap.sh
+```
+
+Example per-instance preparation:
+
+```bash
+scripts/remote_prepare_instance.sh 1 /app/paddle-amd-remote
 ```
 
 Example command bundle generation for manual execution in the remote terminal:

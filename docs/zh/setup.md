@@ -57,11 +57,18 @@
 3. 当 Jupyter terminal websocket 可用时，本仓库可以直接执行终端命令
 4. 真实运行结果仍需作为验证证据单独记录
 
+重要实例规则：
+
+1. 每个新建的 Jupyter 实例都应视为临时环境
+2. 不要假设新实例中已经安装 Paddle
+3. 每次创建新实例后都应重新执行远程准备流程
+
 远程辅助资产：
 
 - `scripts/jupyter_remote.py`：用于 Jupyter API 登录、终端列表或创建、session 列表、文件上传以及基于 terminal websocket 的命令执行
 - `scripts/render_remote_bootstrap.sh`：生成可直接在远程终端执行的 bootstrap 脚本，用于 clone 或刷新本仓库、Paddle 和 PaddleX
 - `scripts/render_remote_env_check.sh`：生成远程环境检查脚本
+- `scripts/remote_prepare_instance.sh`：用于对当前 Jupyter 终端执行整套远程准备流程
 - `.github/skills/remote-rocm-jupyter/SKILL.md`：供后续 Copilot 复用的远程 ROCm 工作流说明
 
 使用 token 登录示例：
@@ -93,6 +100,12 @@ terminal websocket 执行示例：
 ```bash
 python3 scripts/jupyter_remote.py exec --command "bash paddle_amd_remote_env_check.sh"
 python3 scripts/jupyter_remote.py exec --command-file /tmp/remote_bootstrap.sh
+```
+
+按实例执行准备流程示例：
+
+```bash
+scripts/remote_prepare_instance.sh 1 /app/paddle-amd-remote
 ```
 
 用于远程终端手动执行的命令包生成示例：
