@@ -16,5 +16,7 @@
 - 添加双语工作区环境与复现指南
 - 为控制平面仓库添加 GitHub origin remote
 - 添加远程 AMD Jupyter 工作流 skill 与辅助脚本
+- 添加 Jupyter terminal websocket 自动化支持
+- 记录首次通过认证的远程 ROCm 环境检查运行结果
 - 添加双语计划、设计、决策、验证与开发日志文档
 - 添加项目级 Copilot 指令，用于约束文档与跟踪规范

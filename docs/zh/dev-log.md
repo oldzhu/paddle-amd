@@ -16,6 +16,10 @@
 - 已添加双语工作区环境与首次复现指南。
 - 已将本地控制平面仓库关联到 GitHub remote `https://github.com/oldzhu/paddle-amd.git`。
 - 已补充远程 AMD ROCm Jupyter 工作流资产，包括工作区 skill、Jupyter API 辅助脚本以及远程 bootstrap 命令生成器。
+- 已为远程辅助脚本增加基于 Jupyter terminal websocket 的命令执行支持。
+- 已完成远程 Jupyter 实例认证，并在终端 `1` 上验证 terminal websocket 命令执行。
+- 已通过 Jupyter terminal websocket 上传并执行远程环境检查脚本。
+- 已确认远程主机具备 ROCm，但当前 Python 环境中尚未安装 Paddle。
 - 创建双语项目文档骨架。
 - 添加项目级共享指令，用于强制执行双语跟踪与证据记录规范。
 

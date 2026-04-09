@@ -54,12 +54,14 @@
 
 1. 由你手动创建或恢复远程实例
 2. 如果提供 token 或 password，本仓库可以准备命令并访问 Jupyter API
-3. 在远程环境中真正执行 shell 命令，当前仍视为需要单独核实的手动步骤；除非后续补充 terminal websocket 自动化
+3. 当 Jupyter terminal websocket 可用时，本仓库可以直接执行终端命令
+4. 真实运行结果仍需作为验证证据单独记录
 
 远程辅助资产：
 
-- `scripts/jupyter_remote.py`：用于 Jupyter API 登录、终端列表或创建、session 列表与文件上传
+- `scripts/jupyter_remote.py`：用于 Jupyter API 登录、终端列表或创建、session 列表、文件上传以及基于 terminal websocket 的命令执行
 - `scripts/render_remote_bootstrap.sh`：生成可直接在远程终端执行的 bootstrap 脚本，用于 clone 或刷新本仓库、Paddle 和 PaddleX
+- `scripts/render_remote_env_check.sh`：生成远程环境检查脚本
 - `.github/skills/remote-rocm-jupyter/SKILL.md`：供后续 Copilot 复用的远程 ROCm 工作流说明
 
 使用 token 登录示例：
@@ -86,13 +88,20 @@ python3 scripts/jupyter_remote.py create-terminal
 python3 scripts/jupyter_remote.py upload scripts/repro_checklist.sh repro_checklist.sh
 ```
 
+terminal websocket 执行示例：
+
+```bash
+python3 scripts/jupyter_remote.py exec --command "bash paddle_amd_remote_env_check.sh"
+python3 scripts/jupyter_remote.py exec --command-file /tmp/remote_bootstrap.sh
+```
+
 用于远程终端手动执行的命令包生成示例：
 
 ```bash
 scripts/render_remote_bootstrap.sh > /tmp/remote_bootstrap.sh
 ```
 
-随后可以将该脚本上传到 Jupyter，或将生成的输出直接粘贴到远程终端中执行。
+随后可以将该脚本上传到 Jupyter、将生成的输出直接粘贴到远程终端中执行，或通过 `scripts/jupyter_remote.py exec` 执行。
 
 ## 首次复现清单
 

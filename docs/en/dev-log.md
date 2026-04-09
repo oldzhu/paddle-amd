@@ -16,6 +16,10 @@
 - Added bilingual workspace setup and first-reproduction guide.
 - Linked the local control-plane repo to GitHub remote `https://github.com/oldzhu/paddle-amd.git`.
 - Added remote AMD ROCm Jupyter workflow assets, including a workspace skill, a Jupyter API helper, and a remote bootstrap command generator.
+- Added Jupyter terminal websocket execution support to the remote helper.
+- Authenticated to the remote Jupyter instance and verified terminal websocket execution against terminal `1`.
+- Uploaded and executed the remote environment check script through the Jupyter terminal websocket.
+- Confirmed ROCm is available on the remote host, but Paddle is not installed in the current Python environment.
 - Created bilingual project documentation skeleton.
 - Added shared project instructions to enforce bilingual tracking and evidence discipline.
 

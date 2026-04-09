@@ -7,4 +7,6 @@ This directory is reserved for reproducibility helpers such as:
 - ROCm repro commands
 - benchmark runners
 - remote Jupyter Lab API helpers
+- remote Jupyter terminal websocket helpers
 - remote bootstrap command generators
+- remote environment check command generators

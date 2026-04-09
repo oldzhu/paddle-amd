@@ -22,4 +22,26 @@
 
 ## 运行记录
 
-当前尚未记录任何验证运行。
+### 2026-04-09 - 远程 Jupyter 环境检查
+
+- 验证目标：AMD 集群 Jupyter 实例 `http://36.151.243.69:30005/lab`
+- 访问方式：认证后的 Jupyter API 加 terminal websocket
+- 远程终端：`1`
+- 命令脚本路径：上传后的 `/app/paddle_amd_remote_env_check.sh`
+- 执行命令：`python3 scripts/jupyter_remote.py exec --terminal 1 --command "bash /app/paddle_amd_remote_env_check.sh"`
+- 操作系统：Ubuntu 22.04.5 LTS
+- Python：`/opt/venv/bin/python`，版本 `3.10.12`
+- pip：`/opt/venv/bin/pip`，版本 `26.0.1`
+- ROCm 证据：
+	- 存在 `/opt/rocm` 与 `/opt/rocm-7.2.1`
+	- `rocminfo` 执行成功
+	- 检测到 GPU agent 为 `gfx1100`
+	- `rocm-smi` 执行成功
+	- `hipcc` 位于 `/opt/rocm/bin/hipcc`
+	- HIP 版本报告为 `7.2.1`
+- Paddle 证据：
+	- `import paddle` 失败，报错为 `ModuleNotFoundError: No module named 'paddle'`
+	- `pip list` 未显示当前环境已安装 Paddle 包
+- 初步结论：
+	- 该远程实例适合作为基于 ROCm 的验证环境。
+	- 在开始框架级复现之前，需要先在远程环境中安装或编译 Paddle。

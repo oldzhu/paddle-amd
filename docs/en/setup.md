@@ -54,12 +54,14 @@ Current operating model:
 
 1. you create or revive the remote instance manually
 2. this repo can prepare commands and interact with Jupyter APIs if a token or password is available
-3. shell command execution in the remote environment is still treated as a verified manual step unless terminal websocket automation is added later
+3. this repo can execute commands through the Jupyter terminal websocket when the terminal endpoint is available
+4. results still need to be verified and logged as real validation evidence
 
 Remote helper assets:
 
-- `scripts/jupyter_remote.py` for Jupyter API login, terminal listing or creation, session listing, and file upload
+- `scripts/jupyter_remote.py` for Jupyter API login, terminal listing or creation, session listing, file upload, and terminal websocket execution
 - `scripts/render_remote_bootstrap.sh` for generating a terminal-ready bootstrap script to clone or refresh this repo, Paddle, and PaddleX on the remote host
+- `scripts/render_remote_env_check.sh` for generating a remote environment inspection script
 - `.github/skills/remote-rocm-jupyter/SKILL.md` for future Copilot workflow reuse
 
 Example login flow with a token:
@@ -86,13 +88,20 @@ python3 scripts/jupyter_remote.py create-terminal
 python3 scripts/jupyter_remote.py upload scripts/repro_checklist.sh repro_checklist.sh
 ```
 
+Example websocket terminal execution:
+
+```bash
+python3 scripts/jupyter_remote.py exec --command "bash paddle_amd_remote_env_check.sh"
+python3 scripts/jupyter_remote.py exec --command-file /tmp/remote_bootstrap.sh
+```
+
 Example command bundle generation for manual execution in the remote terminal:
 
 ```bash
 scripts/render_remote_bootstrap.sh > /tmp/remote_bootstrap.sh
 ```
 
-You can then upload that script to Jupyter or paste the generated output into a remote terminal.
+You can then upload that script to Jupyter, paste the generated output into a remote terminal, or execute it through `scripts/jupyter_remote.py exec`.
 
 ## First Reproduction Checklist
 

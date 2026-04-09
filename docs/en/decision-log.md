@@ -16,12 +16,12 @@
 - Decision: use WSL for editing and orchestration, but rely on native Linux ROCm hardware or a remote ROCm machine for authoritative validation.
 - Consequence: scripts and patch flow must support cross-machine execution.
 
-## 2026-04-09 - Remote Jupyter execution is semi-automated
+## 2026-04-09 - Remote Jupyter execution uses API plus websocket automation
 
 - Status: accepted
-- Context: the AMD cluster currently exposes Jupyter Lab over HTTP, and instance creation is manual. API access is possible, but remote shell execution is not fully automated from the current VS Code tool surface.
-- Decision: support remote validation through a hybrid workflow: manual instance creation, scripted Jupyter API access when credentials are available, and generated command bundles for terminal execution.
-- Consequence: future remote test runs should record which steps were automated and which were executed manually inside Jupyter.
+- Context: the AMD cluster exposes Jupyter Lab over HTTP, instance creation is manual, authenticated API access is available, and terminal websocket access is available for command execution.
+- Decision: support remote validation through a hybrid workflow: manual instance creation plus scripted Jupyter API access and terminal websocket execution when the remote terminal endpoint is live.
+- Consequence: future remote test runs should still record which steps were automated and which required manual intervention.
 
 ## Entry Template
 

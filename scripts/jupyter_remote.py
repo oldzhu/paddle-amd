@@ -6,11 +6,15 @@ import http.cookiejar
 import json
 import os
 import re
+import shlex
 import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from pathlib import Path
+
+import websocket
 
 
 DEFAULT_SESSION_FILE = os.path.expanduser("~/.cache/paddle-amd/jupyter-remote-session.json")
@@ -126,6 +130,79 @@ class JupyterRemote:
         with self._request("PUT", url, data=data, headers=headers) as response:
             return json.loads(response.read().decode("utf-8"))
 
+    def websocket_url(self, terminal_name: str):
+        base_url = self.state.get("base_url")
+        if not base_url:
+            raise RuntimeError("No remote session configured. Run login first.")
+        ws_base = base_url.replace("http://", "ws://").replace("https://", "wss://")
+        url = f"{ws_base}/terminals/websocket/{terminal_name}"
+        token = self.state.get("token")
+        if token:
+            url = f"{url}?token={urllib.parse.quote(token)}"
+        return url
+
+    def execute_in_terminal(self, terminal_name: str, command: str, timeout: float = 60.0):
+        ws = websocket.create_connection(self.websocket_url(terminal_name), timeout=timeout)
+        ws.settimeout(timeout)
+        marker = f"__PADDLE_AMD_DONE_{uuid.uuid4().hex}__"
+        wrapped = (
+            "bash -lc "
+            + shlex.quote(
+                command
+                + "\n"
+                + f"__paddle_amd_status=$?; printf '\\n{marker}:%s\\n' \"$__paddle_amd_status\"\n"
+            )
+            + "\n"
+        )
+
+        output_parts = []
+        exit_code = None
+        try:
+            try:
+                first = ws.recv()
+                if first:
+                    payload = json.loads(first)
+                    if payload[0] != "setup":
+                        output_parts.append(str(first))
+            except Exception:
+                pass
+
+            ws.send(json.dumps(["stdin", wrapped]))
+
+            while True:
+                raw = ws.recv()
+                if raw is None:
+                    break
+                try:
+                    payload = json.loads(raw)
+                except Exception:
+                    output_parts.append(str(raw))
+                    continue
+
+                msg_type = payload[0]
+                if msg_type in {"stdout", "stderr"}:
+                    output_parts.append(payload[1])
+                    combined = "".join(output_parts)
+                    match = re.search(re.escape(marker) + r":(\d+)", combined)
+                    if match:
+                        exit_code = int(match.group(1))
+                        combined = re.sub(r"\n?" + re.escape(marker) + r":\d+\n?", "\n", combined)
+                        return {
+                            "terminal": terminal_name,
+                            "exit_code": exit_code,
+                            "output": combined.rstrip(),
+                        }
+                elif msg_type == "disconnect":
+                    break
+        finally:
+            ws.close()
+
+        return {
+            "terminal": terminal_name,
+            "exit_code": exit_code,
+            "output": "".join(output_parts).rstrip(),
+        }
+
 
 def cmd_login(args):
     client = JupyterRemote(args.session_file)
@@ -164,6 +241,27 @@ def cmd_upload(args):
     print(json.dumps(client.upload_file(args.local_path, args.remote_path), indent=2, sort_keys=True))
 
 
+def cmd_exec(args):
+    client = JupyterRemote(args.session_file)
+    terminal_name = args.terminal
+    if not terminal_name:
+        terminals = client.get_json("/api/terminals")
+        if terminals:
+            terminal_name = terminals[0]["name"]
+        else:
+            created = client.post_json("/api/terminals", {})
+            terminal_name = created["name"]
+
+    command = args.command if args.command is not None else Path(args.command_file).read_text()
+    result = client.execute_in_terminal(terminal_name, command, timeout=args.timeout)
+    if args.json:
+        print(json.dumps(result, indent=2, sort_keys=True))
+    else:
+        if result["output"]:
+            print(result["output"])
+        print(f"\n[exit_code={result['exit_code']}]")
+
+
 def build_parser():
     parser = argparse.ArgumentParser(description="Helpers for the remote AMD ROCm Jupyter environment")
     parser.add_argument("--session-file", default=DEFAULT_SESSION_FILE, help="Session metadata file path")
@@ -193,6 +291,15 @@ def build_parser():
     upload.add_argument("local_path", help="Local file to upload")
     upload.add_argument("remote_path", help="Remote path relative to the Jupyter contents root")
     upload.set_defaults(func=cmd_upload)
+
+    exec_parser = subparsers.add_parser("exec", help="Execute a command in a remote Jupyter terminal over websocket")
+    exec_parser.add_argument("--terminal", help="Remote terminal name; defaults to the first terminal or creates one")
+    exec_group = exec_parser.add_mutually_exclusive_group(required=True)
+    exec_group.add_argument("--command", help="Command string to execute remotely")
+    exec_group.add_argument("--command-file", help="Local file whose contents will be executed remotely")
+    exec_parser.add_argument("--timeout", type=float, default=60.0, help="Websocket receive timeout in seconds")
+    exec_parser.add_argument("--json", action="store_true", help="Emit JSON instead of plain text")
+    exec_parser.set_defaults(func=cmd_exec)
 
     return parser
 
