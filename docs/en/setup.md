@@ -61,7 +61,8 @@ Important instance rule:
 
 1. treat every new Jupyter instance as ephemeral
 2. do not assume Paddle is installed in a fresh instance
-3. rerun the remote preparation workflow each time a new instance is created
+3. check each new instance first, then prepare only what is missing or outdated
+4. if Paddle is already present and usable, do not reinstall it
 
 Remote helper assets:
 

@@ -23,6 +23,7 @@
 - Added a reusable per-instance remote preparation wrapper for future ephemeral Jupyter instances.
 - Fixed remote command-file execution so failing `set -e` scripts return a proper exit code instead of appearing to hang.
 - Successfully bootstrapped the current remote instance under `/app/paddle-amd-remote`, including the control-plane repo, Paddle clone, and PaddleX clone.
+- Refined the remote instance rule to `check first, then prepare only what is missing or unsuitable`, instead of implying unconditional reinstall or reclone.
 - Created bilingual project documentation skeleton.
 - Added shared project instructions to enforce bilingual tracking and evidence discipline.
 

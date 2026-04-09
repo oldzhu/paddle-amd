@@ -20,5 +20,6 @@
 - recorded first authenticated remote ROCm environment inspection run
 - added reusable per-instance remote preparation automation
 - fixed remote bootstrap completion handling and verified per-instance bootstrap on the live Jupyter instance
+- refined remote instance policy from unconditional prepare wording to check-first preparation wording
 - added bilingual planning, design, decision, validation, and development log documents
 - added project-wide Copilot instructions for documentation and tracking discipline

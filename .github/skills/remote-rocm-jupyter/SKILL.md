@@ -32,13 +32,14 @@ This workflow does not guarantee full browser automation from VS Code. The Jupyt
 Treat each Jupyter instance as ephemeral.
 
 1. A newly created instance may not contain Paddle, PaddleX, or this control-plane repo.
-2. Run the remote preparation workflow for every fresh instance.
+2. Check every fresh instance first, then prepare only the missing or stale parts.
 3. The preparation workflow must at least:
 	- verify ROCm visibility
-	- recreate the remote control-plane workspace
-	- clone or refresh Paddle and PaddleX
+	- ensure the remote control-plane workspace exists and is up to date
+	- ensure Paddle and PaddleX exist and are refreshed to the expected branch state
 	- check whether Paddle is importable in the active Python environment
-4. If Paddle is missing, record that state explicitly before starting validation or reproduction.
+4. If Paddle is already available and acceptable for the task, do not reinstall it.
+5. If Paddle is missing or the wrong build, record that state explicitly before starting validation or reproduction.
 
 ## Main Assets
 

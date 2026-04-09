@@ -23,12 +23,12 @@
 - Decision: support remote validation through a hybrid workflow: manual instance creation plus scripted Jupyter API access and terminal websocket execution when the remote terminal endpoint is live.
 - Consequence: future remote test runs should still record which steps were automated and which required manual intervention.
 
-## 2026-04-09 - Every fresh Jupyter instance requires preparation
+## 2026-04-09 - Every fresh Jupyter instance requires check-first preparation
 
 - Status: accepted
 - Context: the remote AMD cluster instances are ephemeral and a newly created instance may not include Paddle or the project workspace.
-- Decision: treat remote instance preparation as a required reusable workflow and rerun it for every fresh instance.
-- Consequence: remote test automation must always begin with environment verification, workspace bootstrap, and a Paddle availability check.
+- Decision: treat remote instance setup as a required reusable check-first workflow: verify the environment, refresh the workspace as needed, and install or build Paddle only if it is missing or unsuitable.
+- Consequence: remote test automation must always begin with environment verification and a Paddle availability check, but should avoid unnecessary reinstall work.
 
 ## Entry Template
 
