@@ -46,6 +46,9 @@ Treat each Jupyter instance as ephemeral.
 - `scripts/jupyter_remote.py`
 - `scripts/render_remote_bootstrap.sh`
 - `scripts/remote_prepare_instance.sh`
+- `scripts/remote_ensure_paddle.sh`
+- `scripts/remote_build_paddle_rocm.sh`
+- `scripts/remote_launch_paddle_rocm_configure.sh`
 - `docs/en/setup.md`
 - `docs/zh/setup.md`
 
@@ -57,5 +60,8 @@ Treat each Jupyter instance as ephemeral.
 4. Use `scripts/jupyter_remote.py exec` for remote terminal command execution when possible.
 5. Use `scripts/render_remote_bootstrap.sh` to produce the terminal commands for the current run.
 6. Use `scripts/remote_prepare_instance.sh` to bootstrap every new instance.
-7. Upload generated scripts through the Jupyter contents API if useful.
-8. Record every real validation run in bilingual docs.
+7. If a pip-installed Paddle build is present but reports `is_compiled_with_rocm() == False`, treat it as unsuitable for this task.
+8. Use `scripts/remote_build_paddle_rocm.sh` to run a check-first ROCm source configure probe before attempting a full remote build.
+9. If terminal websocket stability is poor, use `scripts/remote_launch_paddle_rocm_configure.sh` to launch a detached configure job and inspect remote log files with shorter follow-up commands.
+10. Upload generated scripts through the Jupyter contents API if useful.
+11. Record every real validation run in bilingual docs.

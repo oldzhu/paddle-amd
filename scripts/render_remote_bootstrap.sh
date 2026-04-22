@@ -15,30 +15,85 @@ CONTROL_REPO_URL="${control_repo_url}"
 PADDLE_URL="${paddle_url}"
 PADDLEX_URL="${paddlex_url}"
 
+required_dns_hosts=(github.com archive.ubuntu.com security.ubuntu.com)
+
+resolve_required_host() {
+  local host="\$1"
+  getent ahostsv4 "\$host" >/dev/null 2>&1 || getent hosts "\$host" >/dev/null 2>&1
+}
+
+retry() {
+  local attempts="\$1"
+  shift
+  local try_index=1
+  while true; do
+    if "\$@"; then
+      return 0
+    fi
+    if [[ "\${try_index}" -ge "\${attempts}" ]]; then
+      return 1
+    fi
+    echo "retry \${try_index}/\${attempts} failed for: \$*" >&2
+    try_index="\$((try_index + 1))"
+  done
+}
+
+retry_clone() {
+  local attempts="\$1"
+  local repo_url="\$2"
+  local target_dir="\$3"
+  shift 3
+  local try_index=1
+  while true; do
+    rm -rf "\$target_dir"
+    if command -v timeout >/dev/null 2>&1; then
+      if timeout 300 git -c http.version=HTTP/1.1 clone "\$@" "\$repo_url" "\$target_dir"; then
+        return 0
+      fi
+    elif git -c http.version=HTTP/1.1 clone "\$@" "\$repo_url" "\$target_dir"; then
+      return 0
+    fi
+    if [[ "\${try_index}" -ge "\${attempts}" ]]; then
+      return 1
+    fi
+    echo "retry clone \${try_index}/\${attempts} failed for: \$repo_url -> \$target_dir" >&2
+    try_index="\$((try_index + 1))"
+  done
+}
+
+echo "== remote DNS preflight =="
+for host in "\${required_dns_hosts[@]}"; do
+  if ! resolve_required_host "\$host"; then
+    echo "required host lookup failed: \$host" >&2
+    echo "remote DNS is unhealthy; run scripts/remote_fix_instance_dns.sh <terminal> before retrying bootstrap" >&2
+    exit 1
+  fi
+done
+
 mkdir -p "\$REMOTE_ROOT"
 
 if [[ ! -d "\$REMOTE_ROOT/.git" ]]; then
-  git clone "\$CONTROL_REPO_URL" "\$REMOTE_ROOT"
+  retry_clone 3 "\$CONTROL_REPO_URL" "\$REMOTE_ROOT"
 else
-  git -C "\$REMOTE_ROOT" fetch origin
+  retry 3 git -C "\$REMOTE_ROOT" -c http.version=HTTP/1.1 fetch origin
   git -C "\$REMOTE_ROOT" checkout main
-  git -C "\$REMOTE_ROOT" pull --ff-only origin main
+  retry 3 git -C "\$REMOTE_ROOT" -c http.version=HTTP/1.1 pull --ff-only origin main
 fi
 
 mkdir -p "\$REMOTE_ROOT/paddlerepos"
 
 if [[ ! -d "\$REMOTE_ROOT/paddlerepos/Paddle/.git" ]]; then
-  git -c http.version=HTTP/1.1 clone --depth 1 --branch develop --single-branch "\$PADDLE_URL" "\$REMOTE_ROOT/paddlerepos/Paddle"
+  retry_clone 3 "\$PADDLE_URL" "\$REMOTE_ROOT/paddlerepos/Paddle" --depth 1 --branch develop --single-branch
 else
-  git -C "\$REMOTE_ROOT/paddlerepos/Paddle" fetch origin develop --depth 1
+  retry 3 git -C "\$REMOTE_ROOT/paddlerepos/Paddle" -c http.version=HTTP/1.1 fetch origin develop --depth 1
   git -C "\$REMOTE_ROOT/paddlerepos/Paddle" checkout develop
   git -C "\$REMOTE_ROOT/paddlerepos/Paddle" reset --hard origin/develop
 fi
 
 if [[ ! -d "\$REMOTE_ROOT/paddlerepos/PaddleX/.git" ]]; then
-  git -c http.version=HTTP/1.1 clone --depth 1 --branch develop --single-branch "\$PADDLEX_URL" "\$REMOTE_ROOT/paddlerepos/PaddleX"
+  retry_clone 3 "\$PADDLEX_URL" "\$REMOTE_ROOT/paddlerepos/PaddleX" --depth 1 --branch develop --single-branch
 else
-  git -C "\$REMOTE_ROOT/paddlerepos/PaddleX" fetch origin develop --depth 1
+  retry 3 git -C "\$REMOTE_ROOT/paddlerepos/PaddleX" -c http.version=HTTP/1.1 fetch origin develop --depth 1
   git -C "\$REMOTE_ROOT/paddlerepos/PaddleX" checkout develop
   git -C "\$REMOTE_ROOT/paddlerepos/PaddleX" reset --hard origin/develop
 fi

@@ -28,6 +28,11 @@ def normalize_base_url(url: str) -> str:
     return url.rstrip("/")
 
 
+def origin_from_base_url(base_url: str) -> str:
+    parsed = urllib.parse.urlsplit(base_url)
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
 class JupyterRemote:
     def __init__(self, session_file: str):
         self.session_path = Path(session_file)
@@ -71,9 +76,17 @@ class JupyterRemote:
             headers["X-XSRFToken"] = xsrf
         return headers
 
+    def _cookie_header(self):
+        cookies = []
+        for cookie in self.cookie_jar:
+            cookies.append(f"{cookie.name}={cookie.value}")
+        return "; ".join(cookies)
+
     def login_with_token(self, base_url: str, token: str):
         base_url = normalize_base_url(base_url)
         self.state = {"base_url": base_url, "token": token, "auth_mode": "token"}
+        lab_url = f"{base_url}/lab?token={urllib.parse.quote(token)}"
+        self._request("GET", lab_url)
         self._save_state()
         info = self.get_json("/api")
         return info
@@ -146,7 +159,16 @@ class JupyterRemote:
                             command: str,
                             timeout: float = 60.0,
                             use_script_file: bool = False):
-        ws = websocket.create_connection(self.websocket_url(terminal_name), timeout=timeout)
+        headers = []
+        cookie_header = self._cookie_header()
+        if cookie_header:
+            headers.append(f"Cookie: {cookie_header}")
+        ws = websocket.create_connection(
+            self.websocket_url(terminal_name),
+            timeout=timeout,
+            header=headers,
+            origin=origin_from_base_url(self.state["base_url"]),
+        )
         ws.settimeout(timeout)
         marker = f"__PADDLE_AMD_DONE_{uuid.uuid4().hex}__"
         if use_script_file:
