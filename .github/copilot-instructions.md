@@ -56,6 +56,41 @@ After each important milestone, update:
 3. validation log if any test or benchmark was run
 4. decision log if a technical or process tradeoff was made
 
+## Official Task Requirements
+
+Task URL: https://github.com/PaddlePaddle/community/blob/master/hackathon/hackathon_10th/【Hackathon_10th】文心合作伙伴任务合集.md#amd为-paddle-框架适配-hip-bf16-精度类型
+
+### Task Goal
+
+Enable HIP BF16 precision in Paddle so PaddleOCR-VL and similar models can natively use BF16 on ROCm without forcing the visual encoder (SigLIP) to FP32.
+
+### Acceptance Criteria
+
+PaddleOCR-VL-1.5 runs fully in BF16 on AMD GPU + ROCm and produces correct output.
+
+### Three PaddleX Workarounds to Remove
+
+Reference branch: `vivienfanghuagood:PaddleX:dev_rocm70`
+
+| # | File | Workaround | Status |
+|---|------|-----------|--------|
+| 1 | `paddlex/utils/misc.py` | `is_bfloat16_available()` hardcodes ROCm as unsupported | ✅ Fixed: added "dcu" to allowlist |
+| 2 | `paddlex/inference/models/doc_vlm/static_infer.py` | `delete_pass("conv2d_add_act_fuse_pass")` + `delete_pass("conv2d_add_fuse_pass")` | ✅ Fixed: Paddle gets `#ifdef PADDLE_WITH_HIP` guard; passes removed from PaddleX |
+| 3 | `paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py` | `_keep_in_fp32_modules = ["visual", "mlp_AR"]` (comment: "MIOpen bf16 conv has bugs") | ✅ Fixed: MIOpen BF16 conv validated correct on gfx1100/ROCm 7.2 (SNR 44-48 dB, 8/8 tests PASS); removed from PaddleX patch |
+
+### Submission Instructions
+
+1. Open GitHub Issue on `PaddlePaddle/Paddle` develop with reproduction steps.
+2. Submit GitHub PR on `PaddlePaddle/Paddle` develop with fix + tests + AMD GPU screenshot.
+3. Open GitHub Issue on `PaddlePaddle/PaddleX` develop describing workaround removal.
+4. Submit GitHub PR on `PaddlePaddle/PaddleX` develop removing all three workarounds.
+5. Send email with PR links and screenshots to: ext_paddle_oss@baidu.com  
+   CC: Zijun.Wei@amd.com, Huaqiang.Fang@amd.com, bingqing.guo@amd.com
+
+### Prize
+
+Champion (code merged into develop): AMD Radeon 9070 XT 16GB OR PN54 AI 5 340 Mini PC (winner picks first).
+
 ## Submission Targets
 
 The expected deliverables for the task are:
