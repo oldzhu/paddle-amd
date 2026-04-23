@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-Send the AMD Hackathon submission email.
+Send the AMD Hackathon submission email via Outlook/Hotmail SMTP.
 
 Usage:
-    export SMTP_USER="your.address@gmail.com"
-    export SMTP_PASS="xxxx xxxx xxxx xxxx"   # Gmail App Password (16 chars)
+    export SMTP_USER="orient_zhu@hotmail.com"
+    export SMTP_PASS="your-outlook-password"
     python3 submission/send_email.py
 
-For Gmail: create an App Password at https://myaccount.google.com/apppasswords
-(requires 2-Step Verification enabled on your Google account).
+Password options:
+  - If you do NOT have 2-Step Verification: use your regular Outlook password.
+  - If you DO have 2-Step Verification:  create an App Password at
+    https://account.microsoft.com/security → Advanced security options → App passwords
 """
 
 import os
@@ -27,13 +29,14 @@ SMTP_PASS = os.environ.get("SMTP_PASS", "")
 if not SMTP_USER or not SMTP_PASS:
     sys.exit(
         "ERROR: set SMTP_USER and SMTP_PASS environment variables before running.\n"
-        "  export SMTP_USER='you@gmail.com'\n"
-        "  export SMTP_PASS='xxxx xxxx xxxx xxxx'   # Gmail App Password"
+        "  export SMTP_USER='orient_zhu@hotmail.com'\n"
+        "  export SMTP_PASS='your-outlook-password'"
     )
 
 # ── Addresses ───────────────────────────────────────────────────────────────
 TO = ["ext_paddle_oss@baidu.com"]
 CC = ["Zijun.Wei@amd.com", "Huaqiang.Fang@amd.com", "bingqing.guo@amd.com"]
+BCC = [SMTP_USER]  # blind-copy yourself so it appears in your inbox as confirmation
 
 # ── Subject ─────────────────────────────────────────────────────────────────
 SUBJECT = (
@@ -152,9 +155,9 @@ else:
     print(f"WARNING: screenshot not found at {SCREENSHOT}, sending without attachment.")
 
 # ── Send ─────────────────────────────────────────────────────────────────────
-all_recipients = TO + CC
-print(f"Connecting to smtp.gmail.com:587 as {SMTP_USER} ...")
-with smtplib.SMTP("smtp.gmail.com", 587) as server:
+all_recipients = TO + CC + BCC
+print(f"Connecting to smtp-mail.outlook.com:587 as {SMTP_USER} ...")
+with smtplib.SMTP("smtp-mail.outlook.com", 587) as server:
     server.ehlo()
     server.starttls()
     server.login(SMTP_USER, SMTP_PASS)

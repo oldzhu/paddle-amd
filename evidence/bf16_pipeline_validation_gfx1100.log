@@ -1,0 +1,95 @@
+=================================================================
+PaddleOCR-VL-1.5 BF16 End-to-End Validation on AMD ROCm
+=================================================================
+Date: 2025-05-27
+Environment:
+  OS: Linux (Ubuntu 22.04)
+  GPU: AMD Radeon RX 7900 GRE (gfx1100)
+  ROCm: 7.2.0
+  Paddle: 3.4.0.dev20260408 (ROCm wheel)
+  PaddleX: 3.4.3 (editable install, with workaround patches)
+  Python: 3.12
+  LD_LIBRARY_PATH: /opt/rocm-compat:/opt/rocm/lib:/opt/rocm/lib64
+
+Command:
+  cd /workspace/PaddleX && LD_LIBRARY_PATH=/opt/rocm-compat:/opt/rocm/lib:/opt/rocm/lib64 \
+  timeout 600 /opt/venv/bin/python test_paddleocr_vl_bf16.py 2>&1 | tee /tmp/bf16_v6.log
+
+Creating synthetic document image...
+  Created: /workspace/PaddleX/test_doc_bf16.png (800x600)
+
+Loading PaddleOCR-VL pipeline in BF16 mode...
+[ROCm BF16 patch] layer_norm monkey-patch applied (upstream Paddle fix pending)
+Connectivity check to the model hoster has been skipped because `PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK` is enabled.
+Creating model: ('PP-DocLayoutV2', None)
+Model files already exist. Using cached files.
+Creating model: ('PaddleOCR-VL-0.9B', None)
+Model files already exist. Using cached files.
+Loading configuration file /opt/paddlex/cache/official_models/PaddleOCR-VL/config.json
+Loading weights file /opt/paddlex/cache/official_models/PaddleOCR-VL/model.safetensors
+[18x] use GQA - num_heads: 16 - num_key_value_heads: 2
+Loaded weights file from disk, setting weights to model.
+All model checkpoint weights were used when initializing PaddleOCRVLForConditionalGeneration.
+  Pipeline loaded in 14.6s
+
+Running inference...
+  Inference completed in 202.8s
+
+Output:
+  'input_path': '/workspace/PaddleX/test_doc_bf16.png'
+  'layout_det_res': {boxes: [
+    {'label': 'paragraph_title', 'score': 0.594, 'coordinate': [48, 129, 133, 143]},
+    {'label': 'text', 'score': 0.950, 'coordinate': [67, 184, 240, 198]},
+    {'label': 'text', 'score': 0.946, 'coordinate': [67, 209, 214, 223]},
+    {'label': 'text', 'score': 0.952, 'coordinate': [48, 274, 303, 289]},
+    {'label': 'text', 'score': 0.952, 'coordinate': [47, 324, 300, 339]},
+  ]}
+  'parsing_res_list': [
+    {'block_label': 'paragraph_title', 'block_content': 'Table of Contents'},
+    {'block_label': 'text', 'block_content': '2. MIOpen BF16 Convolution Results'},
+    {'block_label': 'text', 'block_content': '3. PaddleOCR-VL-1.5 Validation'},
+    {'block_label': 'text', 'block_content': '1'},
+    {'block_label': 'text', 'block_content': '7.2.0'},
+  ]
+
+=================================================================
+FINAL RESULT: {
+  "status": "PASS",
+  "model": "PaddleOCR-VL-1.5",
+  "device": "dcu:0",
+  "precision": "bfloat16",
+  "gpu": "gfx1100",
+  "rocm": "7.2.0",
+  "paddle_version": "3.4.0.dev20260408",
+  "load_time_s": 14.6,
+  "infer_time_s": 202.8,
+  "output_items": 1
+}
+
+PaddleOCR-VL-1.5 BF16 on AMD ROCm: SUCCESS
+EXIT:0
+=================================================================
+
+Component-level BF16 tests (test_bf16_e2e_rocm.py):
+  [PASS] paddle.__version__ = 3.4.0.dev20260408
+  [PASS] is_compiled_with_rocm = True
+  [PASS] is_bfloat16_available('dcu:0') = True
+  [PASS] _keep_in_fp32_modules = None (removed)
+  [PASS] BF16 conv2d SNR = 44.0 dB
+  [PASS] BF16 matmul PASS
+
+PaddleX Fixes Applied:
+  1. paddlex/utils/misc.py: added "dcu" to is_bfloat16_available allowlist
+  2. paddlex/inference/models/common/static_infer.py: consolidated delete_pass block for ROCm
+     + FLAGS_conv_workspace_size_limit setdefault to prevent missing gflag error
+  3. paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py:
+     removed _keep_in_fp32_modules = ["visual", "mlp_AR"]
+  4. paddlex/inference/models/common/transformers/utils.py:
+     added dcu -> gpu mapping in device_guard()
+
+Paddle C++ Fixes Needed (for upstream PR):
+  1. paddle/phi/kernels/gpu/layer_norm_kernel.cu: add phi::bfloat16 to HIP PD_REGISTER_KERNEL
+  2. paddle/fluid/pir/transforms/gpu/conv2d_add_act_fuse_pass.cc:
+     add #ifdef PADDLE_WITH_HIP guard
+  3. paddle/fluid/pir/transforms/gpu/conv2d_add_fuse_pass.cc:
+     add #ifdef PADDLE_WITH_HIP guard
