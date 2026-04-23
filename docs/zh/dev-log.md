@@ -175,7 +175,21 @@
 - 在下一次实例恢复后，改为“实例内后台脚本 + `/tmp/paddle_amd_vllm_direct.*` 结果文件”重跑判别，规避长等待阶段 websocket 丢流问题。
 - 已捕获终态判别结果：`STATUS=READY`、`READY_AT_SEC=348`；直接日志包含 `Application startup complete`，本地 `GET /v1/models` 返回 `200 OK`。
 - 本里程碑的根因分流已收敛：`verify_inference.sh` 的 `failed-server` 现有证据更符合“180s 就绪窗口不足”，而非 vLLM 必现即时初始化失败。
+## 2025-05-27
 
+- 在 gfx1100 / ROCm 7.2.0 上完成 PaddleOCR-VL-1.5 完整 BF16 端对端验证。
+- 已应用全部 PaddleX 补丁（workaround 移除 + 额外兼容修复）：
+  1. `paddlex/utils/misc.py`：`is_bfloat16_available()` 白名单新增 `"dcu"`（workaround #1）。
+  2. `paddlex/inference/models/common/static_infer.py`：合并 ROCm `delete_pass` 守卫 + 添加 `FLAGS_conv_workspace_size_limit` 环境变量默认值（workaround #2）。
+  3. `paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py`：移除 `_keep_in_fp32_modules = ["visual", "mlp_AR"]`（workaround #3）。
+  4. `paddlex/inference/models/common/transformers/utils.py`：在 `device_guard()` 中添加 `dcu→gpu` 映射（新增修复；`paddle.set_device("dcu:0")` 会报错）。
+  5. `paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py`：添加 `LayerNorm.forward` BF16→FP32 兼容垫片（新增修复；Paddle HIP wheel 未为 `bfloat16` 注册 `layer_norm` 内核）。
+- 发现两个超出原始范围的新 Paddle C++ 根因：
+  - **Bug A（conv2d）**：`fused_conv2d_add_act` 内核仅有 CUDA 实现，无 HIP → 修复方案：`#ifdef PADDLE_WITH_HIP` 守卫（已在补丁中）。
+  - **Bug B（layer_norm）**：`layer_norm` HIP `PD_REGISTER_KERNEL` 未包含 `phi::bfloat16` → 修复方案：在 `layer_norm_kernel.cu` 中补充 `phi::bfloat16` 注册。
+- 更新 Paddle 补丁：`patches/paddle-hip-bf16-kernels.patch`（59 行，涵盖 conv2d pass 守卫 + layer_norm BF16 注册）。
+- 验证结果：**通过（PASS）** — `test_paddleocr_vl_bf16.py` exit 0，推理用时 202.8s，OCR 输出正确。
+- 证据已保存至 `evidence/bf16_pipeline_validation_gfx1100.log`。
 ## 2026-04-22
 
 - 在 `30001` 实例（gfx1100 / ROCm 7.2.0）继续 GPU 验证工作。

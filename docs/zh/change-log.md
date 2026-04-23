@@ -151,6 +151,22 @@
 - 已确认直接 vLLM 日志达到 `Application startup complete`，并对 `GET /v1/models` 返回 `200 OK`
 - 已记录判别结论：`verify_inference.sh` 的 `failed-server` 主要是冷启动下 180s 就绪预算不足，而非后端必现即时初始化失败
 
+## 2025-05-27
+
+- 在 gfx1100 / ROCm 7.2.0 上使用原生 Paddle ROCm wheel（非 vLLM）完成 PaddleOCR-VL-1.5 完整 BF16 端对端流水线验证
+- 修复 5 处 ROCm BF16 兼容性问题：
+  1. `is_bfloat16_available()` 白名单缺少 `"dcu"`（workaround #1）
+  2. `static_infer.py` 缺少 `delete_pass` ROCm 合并守卫（workaround #2）
+  3. `_paddleocr_vl.py` 中 `_keep_in_fp32_modules` 将视觉编码器强制转为 FP32（workaround #3）
+  4. `device_guard()` 未处理 `"dcu"` 设备类型（`paddle.set_device` 会拒绝该值）
+  5. `LayerNorm.forward` 需要 BF16→FP32 垫片（Paddle HIP wheel 未注册 `bfloat16` layer_norm 内核）
+- 确认 2 处需要上游 PR 的 Paddle C++ 根因：
+  - `conv2d_add_act_fuse_pass.cc` / `conv2d_add_fuse_pass.cc` 缺少 `#ifdef PADDLE_WITH_HIP` 守卫
+  - `layer_norm_kernel.cu` HIP `PD_REGISTER_KERNEL` 缺少 `phi::bfloat16`
+- 将 Paddle C++ 合并补丁保存至 `patches/paddle-hip-bf16-kernels.patch`（59 行）
+- 将验证证据保存至 `evidence/bf16_pipeline_validation_gfx1100.log`
+- **通过（PASS）：PaddleOCR-VL-1.5 BF16 推理 202.8s，OCR 输出正确，EXIT:0**
+
 ## 2026-04-22
 
 - 重新接入新实例 `30001`（端口从此前 `30008` 变更）

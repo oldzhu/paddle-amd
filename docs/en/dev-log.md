@@ -176,6 +176,22 @@
 - Captured terminal discriminator result: `STATUS=READY`, `READY_AT_SEC=348`, with direct log showing `Application startup complete` and local `GET /v1/models` returning `200 OK`.
 - Closed the root-cause split for this milestone: `verify_inference.sh` `failed-server` is now evidenced as a readiness-window mismatch (`180s` gate) rather than a deterministic immediate vLLM init failure.
 
+## 2025-05-27
+
+- Completed full end-to-end BF16 validation of PaddleOCR-VL-1.5 on gfx1100 / ROCm 7.2.0.
+- Applied all PaddleX workaround removals and additional compatibility fixes:
+  1. `paddlex/utils/misc.py`: `is_bfloat16_available()` — added `"dcu"` to allowlist (workaround #1).
+  2. `paddlex/inference/models/common/static_infer.py`: consolidated `delete_pass` ROCm guard + `FLAGS_conv_workspace_size_limit` env setdefault (workaround #2).
+  3. `paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py`: removed `_keep_in_fp32_modules = ["visual", "mlp_AR"]` (workaround #3).
+  4. `paddlex/inference/models/common/transformers/utils.py`: added `dcu→gpu` mapping in `device_guard()` (new fix; `paddle.set_device("dcu:0")` not accepted).
+  5. `paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py`: added `LayerNorm.forward` BF16→FP32 shim (new fix; Paddle HIP wheel did not register `layer_norm` for `bfloat16`).
+- Identified two new Paddle C++ root causes beyond the original scope:
+  - **Bug A** (conv2d): `fused_conv2d_add_act` kernel only CUDA, not HIP → fix: `#ifdef PADDLE_WITH_HIP` guard (already in patch).
+  - **Bug B** (layer_norm): `layer_norm` HIP `PD_REGISTER_KERNEL` does not include `phi::bfloat16` → fix: add `phi::bfloat16` to HIP registration in `layer_norm_kernel.cu`.
+- Updated Paddle patch: `patches/paddle-hip-bf16-kernels.patch` (59 lines, covers conv2d pass guard + layer_norm BF16 registration).
+- Validation result: **PASS** — `test_paddleocr_vl_bf16.py` exit 0, inference in 202.8s, OCR output correct.
+- Evidence saved to `evidence/bf16_pipeline_validation_gfx1100.log`.
+
 ## 2026-04-22
 
 - Continued GPU validation on `30001` instance (gfx1100 / ROCm 7.2.0).

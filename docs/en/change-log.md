@@ -151,6 +151,22 @@
 - confirmed direct vLLM log reached `Application startup complete` and served `GET /v1/models` with `200 OK`
 - recorded discriminator conclusion: `verify_inference.sh` `failed-server` is primarily a 180s readiness-budget mismatch under cold start, not a deterministic immediate backend init failure
 
+## 2025-05-27
+
+- completed full BF16 end-to-end pipeline validation of PaddleOCR-VL-1.5 on gfx1100 / ROCm 7.2.0 with native Paddle ROCm wheel (not vLLM)
+- identified and fixed 5 PaddleX compatibility issues for BF16 on ROCm:
+  1. `is_bfloat16_available()` missing `"dcu"` in allowlist (workaround #1)
+  2. `static_infer.py` missing consolidated `delete_pass` ROCm guard (workaround #2)
+  3. `_paddleocr_vl.py` `_keep_in_fp32_modules` forcing visual encoder to FP32 (workaround #3)
+  4. `device_guard()` not handling `"dcu"` device type (paddle.set_device would reject it)
+  5. `LayerNorm.forward` BF16→FP32 shim needed because Paddle HIP wheel missing `bfloat16` layer_norm kernel
+- identified 2 Paddle C++ root causes requiring upstream PR:
+  - `conv2d_add_act_fuse_pass.cc` / `conv2d_add_fuse_pass.cc` missing `#ifdef PADDLE_WITH_HIP` guard
+  - `layer_norm_kernel.cu` HIP `PD_REGISTER_KERNEL` missing `phi::bfloat16`
+- saved combined Paddle C++ patch to `patches/paddle-hip-bf16-kernels.patch` (59 lines)
+- saved validation evidence to `evidence/bf16_pipeline_validation_gfx1100.log`
+- **PASS: PaddleOCR-VL-1.5 BF16 inference 202.8s, OCR output correct, EXIT:0**
+
 ## 2026-04-22
 
 - reconnected to new instance `30001` (port change from previous `30008`)

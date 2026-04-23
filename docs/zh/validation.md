@@ -22,6 +22,65 @@
 
 ## 运行记录
 
+### 2025-05-27 — **通过（PASS）**：PaddleOCR-VL-1.5 完整 BF16 端对端流水线验证（gfx1100/ROCm 7.2，`30001` 实例）
+
+- 验证目标：`http://36.151.243.69:30001/instance/nb-1838d2b6/lab`
+- 环境：
+  - OS：Ubuntu 24.04.3 LTS
+  - GPU：AMD Radeon RX 7900 GRE（gfx1100）
+  - ROCm：7.2.0
+  - Paddle：3.4.0.dev20260408（ROCm wheel — `paddlepaddle_dcu`）
+  - PaddleX：3.4.3（可编辑安装 `/workspace/PaddleX`，已应用所有补丁）
+  - Python：3.12
+  - LD_LIBRARY_PATH：`/opt/rocm-compat:/opt/rocm/lib:/opt/rocm/lib64`
+  - SONAME 垫片：`libamdhip64.so.6 → libamdhip64.so.7`
+- 测试脚本：`/workspace/PaddleX/test_paddleocr_vl_bf16.py`
+- 命令：
+  ```bash
+  cd /workspace/PaddleX
+  LD_LIBRARY_PATH=/opt/rocm-compat:/opt/rocm/lib:/opt/rocm/lib64 \
+    timeout 600 /opt/venv/bin/python test_paddleocr_vl_bf16.py 2>&1 | tee /tmp/bf16_v6.log
+  ```
+- 结果：
+  - 流水线加载用时 14.6s
+  - 推理完成用时 202.8s
+  - 输出：版面检测识别出 5 个块（段落标题 + 文本），OCR 文本内容正确
+  - 最终 JSON：
+    ```json
+    {
+      "status": "PASS",
+      "model": "PaddleOCR-VL-1.5",
+      "device": "dcu:0",
+      "precision": "bfloat16",
+      "gpu": "gfx1100",
+      "rocm": "7.2.0",
+      "paddle_version": "3.4.0.dev20260408",
+      "load_time_s": 14.6,
+      "infer_time_s": 202.8,
+      "output_items": 1
+    }
+    ```
+- 算子级 BF16 测试（全部通过）：
+  - `is_compiled_with_rocm()` = True
+  - `is_bfloat16_available('dcu:0')` = True
+  - `_keep_in_fp32_modules` = None（已移除）
+  - BF16 conv2d SNR = 44.0 dB
+  - BF16 matmul 通过
+- 证据文件：`evidence/bf16_pipeline_validation_gfx1100.log`
+- 已应用 PaddleX 修复（共 5 处）：
+  1. `paddlex/utils/misc.py`：在 `is_bfloat16_available()` 白名单中添加 `"dcu"`
+  2. `paddlex/inference/models/common/static_infer.py`：合并 `delete_pass` 块 + 添加 `FLAGS_conv_workspace_size_limit` 默认值
+  3. `paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py`：移除 `_keep_in_fp32_modules = ["visual", "mlp_AR"]`
+  4. `paddlex/inference/models/common/transformers/utils.py`：在 `device_guard()` 中添加 `dcu→gpu` 映射
+  5. `paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py`：添加 `LayerNorm.forward` BF16→FP32 兼容垫片（待 Paddle C++ 内核修复合并后可删除）
+- 已提交 Paddle C++ 修复（上游 PR）：
+  1. `paddle/phi/kernels/gpu/layer_norm_kernel.cu`：在 HIP `PD_REGISTER_KERNEL` 中添加 `phi::bfloat16`
+  2. `paddle/fluid/pir/transforms/gpu/conv2d_add_act_fuse_pass.cc`：添加 `#ifdef PADDLE_WITH_HIP` 守卫
+  3. `paddle/fluid/pir/transforms/gpu/conv2d_add_fuse_pass.cc`：添加 `#ifdef PADDLE_WITH_HIP` 守卫
+- 总体结论：**PaddleOCR-VL-1.5 在 AMD gfx1100 + ROCm 7.2.0 上以 BF16 精度成功运行。3 个原始 workaround 全部移除，另有 2 个额外修复已应用。模型输出 OCR 结果正确。**
+
+---
+
 ### 2026-04-22 — **通过（PASS）**：Paddle GPU 静态推理——conv2d 融合 Pass Bug 确认与修复方案验证（`30001` 实例）
 
 - 验证目标：`http://36.151.243.69:30001/instance/nb-1838d2b6/lab`（终端 2）

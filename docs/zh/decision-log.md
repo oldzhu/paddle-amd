@@ -113,7 +113,19 @@
 - 背景：在 `30002` 上，即使同一实例此前已通过 DNS 检查，重启后仍再次出现主机解析回退；重新执行 DNS 修复后 apt 与运行时准备路径恢复。
 - 决策：对每次重启或新建的 Jupyter 实例，在部署与验证命令之前都先执行 DNS 修复并做简短包源主机解析预检。
 - 影响：远程验证流程对实例重启更具韧性，可避免在可预期的解析回退上重复浪费验证轮次。
+## 2025-05-27 - 在上游 Paddle wheel 修复合并前，使用 Python 猴子补丁解决 BF16 layer_norm 内核缺失问题
 
+- 状态：已接受
+- 背景：Paddle ROCm wheel（3.4.0.dev20260408）未在 `layer_norm` HIP `PD_REGISTER_KERNEL` 中注册 `phi::bfloat16`。在当前验证时间窗口内无法重新编译 wheel。`layer_norm_kernel.cu` 的 C++ 修复已完成，将作为上游 PR 提交。
+- 决策：在 `_paddleocr_vl.py`（VLM worker 子进程入口）中添加 `LayerNorm.forward` 猴子补丁，在 layer_norm 调用前后执行 BF16→FP32→BF16 类型转换。该垫片放置于 VLM 子进程文件中，确保在正确的进程上下文中生效。C++ 修复写入 `patches/paddle-hip-bf16-kernels.patch` 用于上游 PR。
+- 影响：无需重新编译 wheel 即可完成完整 BF16 流水线验证。待上游 Paddle PR 合并并发布新 wheel 后，Python 垫片可直接删除。
+
+## 2025-05-27 - 通过 os.environ.setdefault 在 create_predictor 前设置 FLAGS_conv_workspace_size_limit
+
+- 状态：已接受
+- 背景：`paddle.inference.create_predictor(config)` 调用 `SetGflags()`，该函数尝试从环境变量中设置 `FLAGS_conv_workspace_size_limit`。该 gflag 在 ROCm/HIP 构建中不存在，若环境变量缺失会导致致命错误。
+- 决策：在 `static_infer.py` ROCm 代码块中于 `create_predictor()` 调用前执行 `os.environ.setdefault("FLAGS_conv_workspace_size_limit", "32")`。使用 `setdefault` 可避免覆盖用户已设置的值。
+- 影响：ROCm 上 Paddle analysis predictor 创建成功。该 gflag 仅存在于进程环境中，CUDA 构建上未使用的 gflag 无负面影响。
 ## 记录模板
 
 - 日期：

@@ -72,3 +72,50 @@ diff --git a/paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_v
      base_model_prefix = ""
  
      def __init__(self, config):
+diff --git a/paddlex/inference/models/common/static_infer.py b/paddlex/inference/models/common/static_infer.py (consolidated ROCm block)
+--- a/paddlex/inference/models/common/static_infer.py
++++ b/paddlex/inference/models/common/static_infer.py
+@@ -484,6 +484,11 @@ class PaddleInfer(StaticInfer):
+         if not DEBUG:
+             config.disable_glog_info()
+ 
++        if paddle.is_compiled_with_rocm():
++            config.delete_pass("conv2d_add_act_fuse_pass")
++            config.delete_pass("conv2d_add_fuse_pass")
++            import os as _os
++            _os.environ.setdefault("FLAGS_conv_workspace_size_limit", "32")
+         predictor = paddle.inference.create_predictor(config)
+ 
+diff --git a/paddlex/inference/models/common/transformers/utils.py b/paddlex/inference/models/common/transformers/utils.py
+--- a/paddlex/inference/models/common/transformers/utils.py
++++ b/paddlex/inference/models/common/transformers/utils.py
+@@ -device_guard function
+     elif device in ["gpu", "xpu", "npu"]:
+         paddle.set_device("{}:{}".format(device, dev_id))
++    elif device == "dcu":
++        # DCU/ROCm uses "gpu" as the Paddle device name
++        paddle.set_device("gpu:{}".format(dev_id))
+     try:
+diff --git a/paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py b/paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py (LayerNorm BF16 shim)
+--- a/paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py
++++ b/paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py
+@@ -import section (after import paddle and import paddle.nn as nn)
++import paddle as _paddle_compat
++if _paddle_compat.is_compiled_with_rocm():
++    import paddle.nn as _nn_compat
++    import paddle.nn.functional as _F_compat
++    _orig_ln_fwd = _nn_compat.LayerNorm.forward
++    def _rocm_bf16_safe_ln_fwd(self, input):
++        if input.dtype == _paddle_compat.bfloat16:
++            x32 = _paddle_compat.cast(input, _paddle_compat.float32)
++            w = getattr(self, "weight", None)
++            b = getattr(self, "bias", None)
++            w32 = _paddle_compat.cast(w, _paddle_compat.float32) if w is not None else None
++            b32 = _paddle_compat.cast(b, _paddle_compat.float32) if b is not None else None
++            out = _F_compat.layer_norm(x32, self._normalized_shape, w32, b32, self._epsilon)
++            return _paddle_compat.cast(out, _paddle_compat.bfloat16)
++        return _orig_ln_fwd(self, input)
++    _nn_compat.LayerNorm.forward = _rocm_bf16_safe_ln_fwd
++del _paddle_compat, _nn_compat, _F_compat, _orig_ln_fwd, _rocm_bf16_safe_ln_fwd
++# NOTE: This shim can be removed once the upstream Paddle wheel registers phi::bfloat16
++# in layer_norm_kernel.cu HIP PD_REGISTER_KERNEL (see patches/paddle-hip-bf16-kernels.patch)

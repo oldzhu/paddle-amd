@@ -114,6 +114,20 @@
 - Decision: for every restarted or newly created Jupyter instance, run DNS repair and a short package-host resolution preflight before deployment or validation commands.
 - Consequence: remote validation becomes restart-tolerant and avoids wasting runs on predictable resolver regressions.
 
+## 2025-05-27 - Use Python monkey-patch for missing BF16 layer_norm kernel until upstream Paddle wheel ships the fix
+
+- Status: accepted
+- Context: The Paddle ROCm wheel (3.4.0.dev20260408) does not register `phi::bfloat16` in the `layer_norm` HIP `PD_REGISTER_KERNEL`. Recompiling the wheel was not feasible in the current validation timeline. The C++ fix for `layer_norm_kernel.cu` has been authored and will be submitted as an upstream PR.
+- Decision: Apply a Python-level `LayerNorm.forward` monkey-patch in `_paddleocr_vl.py` (the VLM worker subprocess entry point) that casts BF16→FP32→BF16 around the layer_norm call. This shim is in the VLM subprocess file so it activates in the correct process context. The C++ fix goes into `patches/paddle-hip-bf16-kernels.patch` for the upstream PR.
+- Consequence: Full BF16 pipeline validation passes without wheel recompilation. Once the upstream Paddle PR is merged and a new wheel ships, the Python shim can be deleted.
+
+## 2025-05-27 - Fix FLAGS_conv_workspace_size_limit via os.environ.setdefault before create_predictor
+
+- Status: accepted
+- Context: `paddle.inference.create_predictor(config)` calls `SetGflags()` which tries to set `FLAGS_conv_workspace_size_limit` from the environment variable. That gflag does not exist in ROCm/HIP builds, causing a fatal error if the env var is absent.
+- Decision: Call `os.environ.setdefault("FLAGS_conv_workspace_size_limit", "32")` in the ROCm block of `static_infer.py` before `create_predictor()`. Using `setdefault` avoids overwriting any user-provided value.
+- Consequence: Paddle analysis predictor creation succeeds on ROCm. The gflag simply exists in the process environment; unused gflags on CUDA builds are harmless.
+
 ## Entry Template
 
 - Date:
