@@ -91,15 +91,52 @@ Reference branch: `vivienfanghuagood:PaddleX:dev_rocm70`
 
 Champion (code merged into develop): AMD Radeon 9070 XT 16GB OR PN54 AI 5 340 Mini PC (winner picks first).
 
+## Hackathon Race Status (Updated 2026-04-23)
+
+The hackathon has entered **赛马 (horse race)** phase. Organizers selected two finalists based on initial submission quality and are now running both in parallel competition.
+
+### Target Branch Change (IMPORTANT)
+
+All Paddle PRs must target **`ROCm/Paddle:paddle_hackthon`** — NOT `PaddlePaddle/Paddle:develop`.
+
+- Branch URL: https://github.com/ROCm/Paddle/tree/paddle_hackthon
+- Our Paddle hackathon PR: **https://github.com/ROCm/Paddle/pull/49**
+- Our Paddle upstream PR (keep for reference): https://github.com/PaddlePaddle/Paddle/pull/78760
+- PaddleX PR still targets `PaddlePaddle/PaddleX:develop`: https://github.com/PaddlePaddle/PaddleX/pull/5112
+
+When submitting further Paddle fixes for this hackathon, always create PRs against `ROCm/Paddle:paddle_hackthon`.
+
+For `gh pr create` commands, use:
+```bash
+gh pr create \
+  --repo ROCm/Paddle \
+  --head "oldzhu:<branch-name>" \
+  --base paddle_hackthon \
+  ...
+```
+
+Our fork `oldzhu/Paddle` (originally forked from `PaddlePaddle/Paddle`) is in the same GitHub fork network as `ROCm/Paddle` (which is also a fork of `PaddlePaddle/Paddle`), so cross-fork PRs work correctly.
+
+### Winning Criteria
+
+Organizers evaluate on **code quality** and **number of HIP BF16 issues resolved**. The hint from organizers: "PaddlePaddle还存在一些HIP_bf16不适配问题，即便可以跑通paddleocr 全量bf16" — there are still remaining HIP BF16 incompatibilities in Paddle beyond what is needed to run PaddleOCR-VL.
+
+### Strategy for Remaining Issues
+
+To maximize score, proactively find and fix more HIP BF16 kernel registration gaps and pass compatibility issues in Paddle. Priority areas:
+- Kernel registration files under `paddle/phi/kernels/gpu/` — check if `phi::bfloat16` is missing from HIP `PD_REGISTER_KERNEL` blocks for common ops (batch_norm, instance_norm, softmax, gelu, etc.)
+- PIR/IR passes under `paddle/fluid/pir/transforms/gpu/` — check for passes that crash on HIP+BF16
+- Any op that uses `phi::float16` but not `phi::bfloat16` in the HIP conditional block
+
 ## Submission Targets
 
 The expected deliverables for the task are:
 
-1. Paddle Issue on develop describing the HIP BF16 problem and reproduction.
-2. Paddle PR on develop implementing the fix with tests.
-3. PaddleX Issue on develop describing removal of the workaround.
-4. PaddleX PR on develop removing the workaround after validation.
-5. AMD GPU validation evidence, including screenshots and correct BF16 execution results for PaddleOCR-VL-1.5.
+1. Paddle Issue on develop describing the HIP BF16 problem and reproduction. ✅ #78759
+2. Paddle PR on `ROCm/Paddle:paddle_hackthon` implementing the fix with tests. ✅ ROCm/Paddle#49
+3. PaddleX Issue on develop describing removal of the workaround. ✅ #5111
+4. PaddleX PR on develop removing the workaround after validation. ✅ #5112
+5. AMD GPU validation evidence, including screenshots and correct BF16 execution results for PaddleOCR-VL-1.5. ✅ evidence/
 
 ## Default Working Style
 
