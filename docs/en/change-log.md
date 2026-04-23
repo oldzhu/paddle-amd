@@ -197,3 +197,11 @@
 - captured live running snapshot at `2026-04-20T07:45:21+00:00` with `STATUS=RUNNING`, pending rc, and active detached runner/verify processes
 - during a longer completion-watch attempt, stream dropped again and endpoint health immediately regressed to persistent `HTTP 503`
 - recorded latest state as infra-interrupted before final benchmark rc collection
+
+## 2026-04-23
+
+- opened Paddle Issue [#78759](https://github.com/PaddlePaddle/Paddle/issues/78759): HIP BF16 failures — layer_norm kernel not registered for bfloat16 + conv2d fuse passes crash on ROCm
+- opened Paddle PR [#78760](https://github.com/PaddlePaddle/Paddle/pull/78760): register bfloat16 in HIP layer_norm kernel + PADDLE_WITH_HIP guard in conv2d fuse passes + unit test
+- opened PaddleX Issue [#5111](https://github.com/PaddlePaddle/PaddleX/issues/5111): remove 3 ROCm BF16 workarounds + 2 supporting fixes
+- opened PaddleX PR [#5112](https://github.com/PaddlePaddle/PaddleX/pull/5112): remove all ROCm BF16 workarounds (dcu allowlist, delete_pass cleanup, _keep_in_fp32_modules removal, LayerNorm shim, dcu→gpu device_guard)
+- generated evidence screenshot `evidence/bf16_pipeline_validation_gfx1100.png`n

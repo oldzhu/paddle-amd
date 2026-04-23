@@ -265,6 +265,19 @@
 - During a longer wait-for-completion stream, websocket dropped again (`Connection to remote host was lost`), and immediate endpoint probes (`login/info/list-terminals`) regressed to persistent `HTTP 503`.
 - Current state for this rerun is infra-interrupted before final benchmark rc recovery.
 
+## 2026-04-23 — GitHub Issue and PR Submission
+
+- Installed `gh` CLI v2.45.0 at `~/bin/gh` (no sudo required).
+- Authenticated GitHub as `oldzhu` using stored OAuth token (repo scope).
+- Forked `PaddlePaddle/Paddle` → `oldzhu/Paddle` and `PaddlePaddle/PaddleX` → `oldzhu/PaddleX`.
+- Created Paddle PR branch `hip-bf16-layer-norm-and-conv2d-fix` with 4 files (3 C++ fixes + unit test `test_layer_norm_bf16_hip.py`); pushed to fork.
+- Created PaddleX PR branch `hip-bf16-remove-rocm-workarounds` with 4 files (5 fixes: dcu allowlist, remove delete_pass blocks, remove `_keep_in_fp32_modules`, LayerNorm BF16 shim, dcu→gpu device_guard); pushed to fork.
+- Created Paddle Issue [#78759](https://github.com/PaddlePaddle/Paddle/issues/78759).
+- Created Paddle PR [#78760](https://github.com/PaddlePaddle/Paddle/pull/78760).
+- Created PaddleX Issue [#5111](https://github.com/PaddlePaddle/PaddleX/issues/5111).
+- Created PaddleX PR [#5112](https://github.com/PaddlePaddle/PaddleX/pull/5112).
+- Generated evidence screenshot `evidence/bf16_pipeline_validation_gfx1100.png` from validation log.
+
 ## Entry Template
 
 - Date:

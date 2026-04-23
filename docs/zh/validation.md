@@ -67,6 +67,12 @@
   - BF16 conv2d SNR = 44.0 dB
   - BF16 matmul 通过
 - 证据文件：`evidence/bf16_pipeline_validation_gfx1100.log`
+- 截图：`evidence/bf16_pipeline_validation_gfx1100.png`
+- 已提交：
+  - Paddle Issue：https://github.com/PaddlePaddle/Paddle/issues/78759
+  - Paddle PR：https://github.com/PaddlePaddle/Paddle/pull/78760
+  - PaddleX Issue：https://github.com/PaddlePaddle/PaddleX/issues/5111
+  - PaddleX PR：https://github.com/PaddlePaddle/PaddleX/pull/5112
 - 已应用 PaddleX 修复（共 5 处）：
   1. `paddlex/utils/misc.py`：在 `is_bfloat16_available()` 白名单中添加 `"dcu"`
   2. `paddlex/inference/models/common/static_infer.py`：合并 `delete_pass` 块 + 添加 `FLAGS_conv_workspace_size_limit` 默认值

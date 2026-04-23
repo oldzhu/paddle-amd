@@ -261,7 +261,18 @@
 - 后续在 `2026-04-20T07:45:21+00:00` 快照中确认：`STATUS=RUNNING`、rc 待产出，后台 runner 与 verify worker 仍存活。
 - 在继续执行“等待到收敛”的长命令时，websocket 再次中断（`Connection to remote host was lost`）；紧随其后的 `login/info/list-terminals` 均回退为持续 `HTTP 503`。
 - 当前该轮状态更新为“最终 rc 回收前再次被基础设施中断”。
+## 2026-04-23 — GitHub Issue 与 PR 提交
 
+- 在 `~/bin/gh` 安装 `gh` CLI v2.45.0（无需 sudo）。
+- 以 `oldzhu` 账号通过存储的 OAuth token 完成 GitHub 鉴权（repo scope）。
+- Fork `PaddlePaddle/Paddle` → `oldzhu/Paddle`、`PaddlePaddle/PaddleX` → `oldzhu/PaddleX`。
+- 创建 Paddle PR 分支 `hip-bf16-layer-norm-and-conv2d-fix`（含 3 个 C++ 修复 + 单元测试 `test_layer_norm_bf16_hip.py`），已推送至 Fork。
+- 创建 PaddleX PR 分支 `hip-bf16-remove-rocm-workarounds`（含 5 处修复：dcu 白名单、删除 delete_pass 代码块、移除 `_keep_in_fp32_modules`、LayerNorm BF16 垫片、dcu→gpu device_guard），已推送至 Fork。
+- 提交 Paddle Issue [#78759](https://github.com/PaddlePaddle/Paddle/issues/78759)。
+- 提交 Paddle PR [#78760](https://github.com/PaddlePaddle/Paddle/pull/78760)。
+- 提交 PaddleX Issue [#5111](https://github.com/PaddlePaddle/PaddleX/issues/5111)。
+- 提交 PaddleX PR [#5112](https://github.com/PaddlePaddle/PaddleX/pull/5112)。
+- 从验证日志生成证据截图 `evidence/bf16_pipeline_validation_gfx1100.png`。
 ## 记录模板
 
 - 日期：

@@ -22,6 +22,71 @@
 
 ## Run Log
 
+### 2025-05-27 — **PASS**: PaddleOCR-VL-1.5 Full BF16 E2E Pipeline Validation on gfx1100/ROCm 7.2 (`30001` instance)
+
+- Validation target: `http://36.151.243.69:30001/instance/nb-1838d2b6/lab`
+- Environment:
+  - OS: Ubuntu 24.04.3 LTS
+  - GPU: AMD Radeon RX 7900 GRE (gfx1100)
+  - ROCm: 7.2.0
+  - Paddle: 3.4.0.dev20260408 (ROCm wheel — `paddlepaddle_dcu`)
+  - PaddleX: 3.4.3 (editable install at `/workspace/PaddleX`, with workaround patches)
+  - Python: 3.12
+  - LD_LIBRARY_PATH: `/opt/rocm-compat:/opt/rocm/lib:/opt/rocm/lib64`
+  - SONAME shim: `libamdhip64.so.6 → libamdhip64.so.7`
+- Test script: `/workspace/PaddleX/test_paddleocr_vl_bf16.py`
+- Command:
+  ```bash
+  cd /workspace/PaddleX
+  LD_LIBRARY_PATH=/opt/rocm-compat:/opt/rocm/lib:/opt/rocm/lib64 \
+    timeout 600 /opt/venv/bin/python test_paddleocr_vl_bf16.py 2>&1 | tee /tmp/bf16_v6.log
+  ```
+- Results:
+  - Pipeline loaded in 14.6s
+  - Inference completed in 202.8s
+  - Output: layout detection found 5 blocks (paragraph_title + text), text OCR correct
+  - Final JSON:
+    ```json
+    {
+      "status": "PASS",
+      "model": "PaddleOCR-VL-1.5",
+      "device": "dcu:0",
+      "precision": "bfloat16",
+      "gpu": "gfx1100",
+      "rocm": "7.2.0",
+      "paddle_version": "3.4.0.dev20260408",
+      "load_time_s": 14.6,
+      "infer_time_s": 202.8,
+      "output_items": 1
+    }
+    ```
+- Component-level BF16 tests (all PASS):
+  - `is_compiled_with_rocm()` = True
+  - `is_bfloat16_available('dcu:0')` = True
+  - `_keep_in_fp32_modules` = None (removed)
+  - BF16 conv2d SNR = 44.0 dB
+  - BF16 matmul PASS
+- Evidence: `evidence/bf16_pipeline_validation_gfx1100.log`
+- Screenshot: `evidence/bf16_pipeline_validation_gfx1100.png`
+- Submitted:
+  - Paddle Issue: https://github.com/PaddlePaddle/Paddle/issues/78759
+  - Paddle PR: https://github.com/PaddlePaddle/Paddle/pull/78760
+  - PaddleX Issue: https://github.com/PaddlePaddle/PaddleX/issues/5111
+  - PaddleX PR: https://github.com/PaddlePaddle/PaddleX/pull/5112
+- PaddleX fixes applied (all 5):
+  1. `paddlex/utils/misc.py`: added `"dcu"` to `is_bfloat16_available()` allowlist
+  2. `paddlex/inference/models/common/static_infer.py`: consolidated `delete_pass` block + `FLAGS_conv_workspace_size_limit` setdefault
+  3. `paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py`: removed `_keep_in_fp32_modules = ["visual", "mlp_AR"]`
+  4. `paddlex/inference/models/common/transformers/utils.py`: added `dcu→gpu` in `device_guard()`
+  5. `paddlex/inference/models/doc_vlm/modeling/paddleocr_vl/_paddleocr_vl.py`: added `LayerNorm.forward` BF16→FP32 shim (pending Paddle C++ kernel fix)
+- Paddle C++ fixes submitted (upstream PR):
+  1. `paddle/phi/kernels/gpu/layer_norm_kernel.cu`: add `phi::bfloat16` to HIP `PD_REGISTER_KERNEL`
+  2. `paddle/fluid/pir/transforms/gpu/conv2d_add_act_fuse_pass.cc`: add `#ifdef PADDLE_WITH_HIP` guard
+  3. `paddle/fluid/pir/transforms/gpu/conv2d_add_fuse_pass.cc`: add `#ifdef PADDLE_WITH_HIP` guard
+- Overall conclusion: **PaddleOCR-VL-1.5 runs successfully in BF16 on AMD gfx1100 with ROCm 7.2.0. All 3 original workarounds removed + 2 additional fixes applied. Model produces correct OCR output.**
+
+---
+
 ### 2026-04-22 — **PASS**: Paddle GPU Static Inference — Conv2D Fuse Pass Bug Confirmed and Fix Validated (`30001` instance)
 
 - Validation target: `http://36.151.243.69:30001/instance/nb-1838d2b6/lab` (terminal 2)

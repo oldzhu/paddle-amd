@@ -194,4 +194,12 @@
 - 当前状态记录为“进行中待收敛”，等待压测结束产出最终结果
 - 已记录运行中快照（`2026-04-20T07:45:21+00:00`）：`STATUS=RUNNING`、rc 待产出，后台 runner 与 verify 进程存活
 - 在进一步长等待收敛时再次丢流，且端点健康立刻回退为持续 `HTTP 503`
+
+## 2026-04-23
+
+- 提交 Paddle Issue [#78759](https://github.com/PaddlePaddle/Paddle/issues/78759)：HIP BF16 失败 — layer_norm 未注册 bfloat16 内核 + conv2d 融合 pass 在 ROCm 上崩溃
+- 提交 Paddle PR [#78760](https://github.com/PaddlePaddle/Paddle/pull/78760)：在 HIP layer_norm 内核注册 bfloat16 + conv2d 融合 pass 添加 PADDLE_WITH_HIP 守卫 + 单元测试
+- 提交 PaddleX Issue [#5111](https://github.com/PaddlePaddle/PaddleX/issues/5111)：移除 3 处 ROCm BF16 临时绕路 + 2 处支撑性修复
+- 提交 PaddleX PR [#5112](https://github.com/PaddlePaddle/PaddleX/pull/5112)：移除全部 ROCm BF16 临时绕路（dcu 白名单、delete_pass 清理、_keep_in_fp32_modules 删除、LayerNorm 垫片、dcu→gpu device_guard）
+- 生成证据截图 `evidence/bf16_pipeline_validation_gfx1100.png`
 - 已将最新状态更新为“最终 rc 回收前再次被基础设施中断”
