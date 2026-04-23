@@ -138,6 +138,24 @@ The expected deliverables for the task are:
 4. PaddleX PR on develop removing the workaround after validation. ✅ #5112
 5. AMD GPU validation evidence, including screenshots and correct BF16 execution results for PaddleOCR-VL-1.5. ✅ evidence/
 
+## Progress Tracking and Resume Policy
+
+At any significant hold point (waiting for organizer reply, waiting for hardware, end of session), create a dated bilingual progress snapshot:
+
+- English: `docs/progress/YYYY-MM-DD-<topic>.md`
+- Chinese: `docs/progress/YYYY-MM-DD-<topic>.zh.md`
+
+Each snapshot must contain:
+1. Current status (what is done, what is in-flight, what is pending)
+2. All submitted PR/Issue links
+3. Detailed findings and audit results discovered so far
+4. Step-by-step resume instructions (commands, branch names, file locations, line numbers)
+5. Environment reference (GPU, ROCm version, wheel path, JupyterLab URL, gh token)
+
+**When resuming after a break:** always read the latest file in `docs/progress/` first — it is the canonical resume point. Do not rely on conversation history alone.
+
+**Rule:** Never start new development work without first checking `docs/progress/` for the most recent snapshot.
+
 ## Default Working Style
 
 1. Keep notes concise and factual.
